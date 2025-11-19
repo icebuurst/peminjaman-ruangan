@@ -82,8 +82,9 @@
         <form action="{{ route('bookings.export') }}" method="GET" class="d-inline">
             <input type="hidden" name="start_date" value="{{ $startDate }}">
             <input type="hidden" name="end_date" value="{{ $endDate }}">
-            <button type="submit" class="btn btn-success btn-custom">
-                <i class="bi bi-file-earmark-excel me-2"></i>Export ke Excel
+            <input type="hidden" name="format" value="pdf">
+            <button type="submit" class="btn btn-danger btn-custom">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Export ke PDF
             </button>
         </form>
         <span class="text-muted ms-2">

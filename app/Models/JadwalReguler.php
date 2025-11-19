@@ -20,8 +20,12 @@ class JadwalReguler extends Model
     ];
 
     protected $casts = [
-        'jam_mulai' => 'datetime:H:i',
-        'jam_selesai' => 'datetime:H:i',
+    // these columns are TIME in the database (HH:MM:SS)
+    // casting them to datetime caused Carbon to add a date part,
+    // so substr() returned the year. Keep them as strings so
+    // existing views using substr(..., 0, 5) work correctly.
+    'jam_mulai' => 'string',
+    'jam_selesai' => 'string',
     ];
 
     /**

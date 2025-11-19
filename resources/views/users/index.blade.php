@@ -9,55 +9,40 @@
 
 @section('content')
 <style>
-    .user-card {
-        background: #ffffff;
-        border-radius: 20px;
-        border: none;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-        transition: all 0.3s ease;
-    }
-    
-    .user-card:hover {
-        box-shadow: 0 15px 50px rgba(0,0,0,0.12);
-    }
-    
-    .user-avatar-large {
-        width: 80px;
-        height: 80px;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%);
-        color: white;
+    /* ---------- Stats cards ---------- */
+    .stat-card-modern {
+        background: #fff;
+        border-radius: 14px;
+        padding: 1rem 1rem 0.9rem 1rem;
         display: flex;
+        gap: .75rem;
         align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 2rem;
-        box-shadow: 0 8px 20px rgba(28,239,244,0.3);
+        box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+        border: 1px solid rgba(15,23,42,0.04);
+        min-height: 90px;
+        transition: transform .18s ease, box-shadow .18s ease;
     }
-    
-    .role-badge-modern {
-        padding: 0.5rem 1.25rem;
-        border-radius: 50px;
-        font-weight: 700;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    
-    .role-admin {
-        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-        color: #92400e;
-    }
-    
-    .role-petugas {
-        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-        color: #1e40af;
-    }
-    
-    .role-peminjam {
-        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-        color: #065f46;
-    }
+    .stat-card-modern:hover{ transform: translateY(-4px); box-shadow: 0 10px 30px rgba(15,23,42,0.08); }
+    .stat-icon-modern{ width:56px; height:56px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.25rem; box-shadow: inset 0 -6px 18px rgba(255,255,255,0.6);}
+    .stat-label{ color:#6b7280; font-weight:700; font-size:0.85rem; }
+    .stat-value{ font-size:1.35rem; font-weight:800; color:#111827; }
+
+    /* ---------- User cards ---------- */
+    .user-card { background: #ffffff; border-radius: 14px; border: 1px solid rgba(15,23,42,0.04); box-shadow: 0 8px 24px rgba(15,23,42,0.04); transition: transform .18s ease; }
+    .user-card:hover { transform: translateY(-6px); box-shadow: 0 18px 45px rgba(15,23,42,0.06); }
+    .user-avatar-large { width:72px; height:72px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.5rem; color:#fff; }
+
+    .role-badge-modern { padding:0.35rem 0.9rem; border-radius:999px; font-weight:700; font-size:0.72rem; text-transform:none; display:inline-flex; gap:0.5rem; align-items:center; }
+    .role-admin{ background: linear-gradient(135deg,#ffedd5,#fed7aa); color:#92400e; }
+    .role-petugas{ background: linear-gradient(135deg,#dbeafe,#bfdbfe); color:#1e3a8a; }
+    .role-peminjam{ background: linear-gradient(135deg,#dcfce7,#bbf7d0); color:#065f46; }
+
+    /* actions */
+    .btn-outline-modern{ border:1px solid rgba(15,23,42,0.06); color:#0f172a; background:transparent; }
+    .btn-modern{ border-radius:10px; padding:0.5rem 0.9rem; }
+
+    /* responsive tweaks */
+    @media (max-width: 767px){ .stat-value{ font-size:1.05rem; } .user-avatar-large{ width:64px; height:64px; } }
 </style>
 
 <div class="container-fluid px-4 py-3">
@@ -75,44 +60,52 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="row g-4 mb-4">
-        <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
-            <div class="stat-card-modern" style="--card-color: #fbbf24;">
-                <div class="stat-icon-modern" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
-                    <i class="bi bi-shield-fill-check" style="color: #f59e0b;"></i>
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-md-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="stat-card-modern">
+                <div class="stat-icon-modern" style="background:linear-gradient(135deg,#fff7ed,#ffedd5);">
+                    <i class="bi bi-shield-fill-check text-warning"></i>
                 </div>
-                <div class="stat-label">Admin</div>
-                <div class="stat-value">{{ $users->where('role', 'admin')->count() }}</div>
+                <div>
+                    <div class="stat-label">Admin</div>
+                    <div class="stat-value">{{ $users->where('role', 'admin')->count() }}</div>
+                </div>
             </div>
         </div>
-        
-        <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
-            <div class="stat-card-modern" style="--card-color: #3b82f6;">
-                <div class="stat-icon-modern" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
-                    <i class="bi bi-person-badge" style="color: #2563eb;"></i>
+
+        <div class="col-sm-6 col-md-3" data-aos="fade-up" data-aos-delay="150">
+            <div class="stat-card-modern">
+                <div class="stat-icon-modern" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);">
+                    <i class="bi bi-person-badge text-primary"></i>
                 </div>
-                <div class="stat-label">Petugas</div>
-                <div class="stat-value">{{ $users->where('role', 'petugas')->count() }}</div>
+                <div>
+                    <div class="stat-label">Petugas</div>
+                    <div class="stat-value">{{ $users->where('role', 'petugas')->count() }}</div>
+                </div>
             </div>
         </div>
-        
-        <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
-            <div class="stat-card-modern" style="--card-color: #10b981;">
-                <div class="stat-icon-modern" style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);">
-                    <i class="bi bi-person" style="color: #059669;"></i>
+
+        <div class="col-sm-6 col-md-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="stat-card-modern">
+                <div class="stat-icon-modern" style="background:linear-gradient(135deg,#ecfdf5,#d1fae5);">
+                    <i class="bi bi-person text-success"></i>
                 </div>
-                <div class="stat-label">Peminjam</div>
-                <div class="stat-value">{{ $users->where('role', 'peminjam')->count() }}</div>
+                <div>
+                    <div class="stat-label">Peminjam</div>
+                    <div class="stat-value">{{ $users->where('role', 'peminjam')->count() }}</div>
+                </div>
             </div>
         </div>
-        
-        <div class="col-md-3" data-aos="fade-up" data-aos-delay="400">
-            <div class="stat-card-modern" style="--card-color: #1ceff4;">
-                <div class="stat-icon-modern" style="background: linear-gradient(135deg, #e0fbfc 0%, #d0f9fa 100%);">
-                    <i class="bi bi-people-fill" style="color: #1ceff4;"></i>
+
+        <div class="col-sm-6 col-md-3" data-aos="fade-up" data-aos-delay="250">
+            <div class="stat-card-modern">
+                <div class="stat-icon-modern" style="background:linear-gradient(135deg,#f0fdfa,#e6f7f7);">
+                    <i class="bi bi-people-fill text-info"></i>
                 </div>
-                <div class="stat-label">Total User</div>
-                <div class="stat-value">{{ $users->count() }}</div>
+                <div>
+                    <div class="stat-label">Total User</div>
+                    <div class="stat-value">{{ $users->count() }}</div>
+                </div>
             </div>
         </div>
     </div>
@@ -120,61 +113,50 @@
     <!-- Users Grid -->
     <div class="row g-4">
         @forelse($users as $user)
-        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 50 }}">
-            <div class="user-card p-4">
-                <div class="d-flex align-items-start gap-3 mb-3">
-                    <div class="user-avatar-large" style="background: linear-gradient(135deg, 
-                        @if($user->role == 'admin') #fbbf24, #f59e0b
-                        @elseif($user->role == 'petugas') #3b82f6, #2563eb
-                        @else #10b981, #059669
-                        @endif
-                    );">
-                        {{ strtoupper(substr($user->name, 0, 1)) }}
+        <div class="col-12 col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="{{ $loop->index * 30 }}">
+            <div class="user-card p-3">
+                <div class="d-flex align-items-start gap-3 mb-2">
+                    <div class="user-avatar-large" style="background: 
+                        @if($user->role == 'admin') linear-gradient(135deg,#ffedd5,#fed7aa)
+                        @elseif($user->role == 'petugas') linear-gradient(135deg,#eff6ff,#dbeafe)
+                        @else linear-gradient(135deg,#ecfdf5,#d1fae5)
+                        @endif;">
+                        <span aria-hidden="true">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                     </div>
                     <div class="flex-grow-1">
-                        <h5 class="fw-bold mb-1" style="color: #191919;">{{ $user->name }}</h5>
-                        <p class="text-muted mb-2" style="font-size: 0.9rem;">
-                            <i class="bi bi-envelope me-1"></i>{{ $user->email }}
-                        </p>
-                        <span class="role-badge-modern role-{{ $user->role }}">
-                            @if($user->role == 'admin')
-                                <i class="bi bi-shield-fill-check me-1"></i>
-                            @elseif($user->role == 'petugas')
-                                <i class="bi bi-person-badge me-1"></i>
-                            @else
-                                <i class="bi bi-person me-1"></i>
-                            @endif
-                            {{ ucfirst($user->role) }}
-                        </span>
+                        <h5 class="fw-semibold mb-0" style="color:#0f172a;">{{ $user->name }}</h5>
+                        <div class="text-muted small mt-1"><i class="bi bi-envelope me-1"></i>{{ $user->email }}</div>
+                        <div class="mt-2">
+                            <span class="role-badge-modern role-{{ $user->role }}">
+                                @if($user->role == 'admin')<i class="bi bi-shield-fill-check"></i>
+                                @elseif($user->role == 'petugas')<i class="bi bi-person-badge"></i>
+                                @else<i class="bi bi-person"></i>@endif
+                                <span style="margin-left:6px">{{ ucfirst($user->role) }}</span>
+                            </span>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="border-top pt-3 mt-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="text-muted">
-                            <i class="bi bi-calendar-plus"></i> Bergabung
-                        </small>
-                        <small class="fw-semibold" style="color: #191919;">
-                            {{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}
-                        </small>
+
+                <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center">
+                    <div class="small text-muted">
+                        <i class="bi bi-calendar-plus"></i> Bergabung
                     </div>
-                    
-                    <div class="d-flex gap-2 mt-3">
-                        <a href="{{ route('users.edit', $user->id) }}" class="btn btn-modern btn-outline-modern flex-grow-1">
-                            <i class="bi bi-pencil"></i> Edit
-                        </a>
-                        @if(Auth::id() != $user->id)
-                        <button type="button" 
-                                class="btn btn-modern flex-grow-1" 
-                                style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b;"
-                                onclick="confirmDelete('{{ $user->name }} ({{ $user->email }})', '{{ route('users.destroy', $user->id) }}')">
-                            <i class="bi bi-trash"></i> Hapus
-                        </button>
-                        @else
-                        <button class="btn btn-modern flex-grow-1" style="background: #f1f3f5; color: #adb5bd;" disabled>
-                            <i class="bi bi-lock"></i> Akun Anda
-                        </button>
-                        @endif
+                    <div class="text-end">
+                        <div class="fw-semibold" style="color:#0f172a;">{{ $user->created_at ? $user->created_at->format('d M Y') : '-' }}</div>
+                        <div class="mt-2 d-flex gap-2">
+                            <a href="{{ route('users.edit', $user->id) }}" class="btn btn-modern btn-outline-modern">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            @if(Auth::id() != $user->id)
+                            <button type="button" class="btn btn-modern" style="background:#ffefef;color:#b91c1c;border:1px solid rgba(185,28,28,0.08);" onclick="confirmDelete('{{ $user->name }} ({{ $user->email }})', '{{ route('users.destroy', $user->id) }}')">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            @else
+                            <button class="btn btn-modern" style="background:#f1f3f5;color:#6b7280;" disabled>
+                                <i class="bi bi-lock"></i>
+                            </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>

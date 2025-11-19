@@ -13,7 +13,12 @@ class JadwalRegulerController extends Controller
      */
     public function index()
     {
-        $jadwals = JadwalReguler::with('room')->orderBy('hari')->orderBy('jam_mulai')->get();
+        // Ensure weekdays order is Senin..Minggu, then sort by start time
+        $jadwals = JadwalReguler::with('room')
+            // Use FIELD to ensure weekday ordering (Senin..Minggu)
+            ->orderByRaw("FIELD(hari, 'Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu')")
+            ->orderBy('jam_mulai')
+            ->get();
         return view('jadwal-reguler.index', compact('jadwals'));
     }
 

@@ -296,7 +296,7 @@
                                     </div>
                                     <div>
                                         <small class="d-block text-muted" style="font-size: 0.75rem;">Ruangan</small>
-                                        <strong>{{ $jadwal->room->nama_room }}</strong>
+                                        <strong>{{ $jadwal->room->nama_room ?? '-' }}</strong>
                                     </div>
                                 </div>
                                 <div class="meta-item-inline">
@@ -378,8 +378,8 @@
                                 <strong>{{ $jadwal->nama_kegiatan }}</strong>
                             </td>
                             <td>
-                                <div class="fw-semibold">{{ $jadwal->room->nama_room }}</div>
-                                <small class="text-muted">{{ $jadwal->room->lokasi }}</small>
+                                <div class="fw-semibold">{{ $jadwal->room->nama_room ?? '-' }}</div>
+                                <small class="text-muted">{{ $jadwal->room->lokasi ?? '-' }}</small>
                             </td>
                             <td>
                                 <span class="day-badge-inline day-{{ strtolower($jadwal->hari) }}">
@@ -424,13 +424,13 @@
 @section('scripts')
 <script>
     function switchView(view, event) {
-        // Update active button
-        document.querySelectorAll('.view-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        if (event && event.target) {
-            event.target.closest('.view-btn').classList.add('active');
+        // Update active button robustly
+        document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+        var btn = null;
+        if (event) {
+            btn = event.currentTarget || event.target.closest('.view-btn');
         }
+        if (btn) btn.classList.add('active');
         
         // Switch views
         if (view === 'cards') {

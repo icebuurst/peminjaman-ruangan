@@ -16,6 +16,7 @@
                     <i class="bi bi-pencil me-2"></i>Form Edit Peminjaman
                 </div>
                 <div class="card-body">
+                    @include('bookings._alternatives')
                     <form action="{{ route('bookings.update', $booking->id_booking) }}" method="POST">
                         @csrf
                         @method('PUT')

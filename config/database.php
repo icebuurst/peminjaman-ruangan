@@ -61,6 +61,16 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
+            // Configuration for DB dump tools (used by spatie/db-dumper)
+            'dump' => [
+                // Path to the directory containing mysqldump (Windows example)
+                // Support both the older 'dump_command_path' and the expected
+                // 'dump_binary_path' used to map to setDumpBinaryPath()
+                'dump_command_path' => env('DB_DUMP_PATH', ''),
+                'dump_binary_path' => env('DB_DUMP_PATH', ''),
+                // Use single transaction when possible (recommended for InnoDB)
+                'useSingleTransaction' => true,
+            ],
         ],
 
         'mariadb' => [

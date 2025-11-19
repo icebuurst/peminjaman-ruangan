@@ -16,6 +16,7 @@
                     <i class="bi bi-calendar-plus me-2"></i>Form Peminjaman
                 </div>
                 <div class="card-body">
+                    @include('bookings._alternatives')
                     <form action="{{ route('bookings.store') }}" method="POST">
                         @csrf
                         

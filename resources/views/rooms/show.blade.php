@@ -114,13 +114,13 @@
                     <div class="row">
                         <div class="col-md-3 fw-semibold">Foto:</div>
                         <div class="col-md-9">
-                            <a href="{{ asset('storage/' . $room->foto) }}" class="glightbox" data-gallery="room-gallery">
-                                <img src="{{ asset('storage/' . $room->foto) }}" alt="{{ $room->nama_room }}" 
+                            <a href="{{ (\Illuminate\Support\Facades\Storage::disk('public')->exists($room->foto) ? \Illuminate\Support\Facades\Storage::disk('public')->url($room->foto) : asset('images/placeholder-room.svg')) }}" class="glightbox" data-gallery="room-gallery">
+                                        <img src="{{ (\Illuminate\Support\Facades\Storage::disk('public')->exists($room->foto) ? \Illuminate\Support\Facades\Storage::disk('public')->url($room->foto) : asset('images/placeholder-room.svg')) }}" alt="{{ $room->nama_room }}" 
                                      class="img-fluid rounded shadow-sm" 
                                      style="max-height: 300px; cursor: pointer; transition: all 0.3s;"
                                      onmouseover="this.style.transform='scale(1.05)'"
                                      onmouseout="this.style.transform='scale(1)'">
-                            </a>
+                                    </a>
                             <small class="text-muted d-block mt-2"><i class="bi bi-zoom-in me-1"></i>Klik untuk memperbesar</small>
                         </div>
                     </div>

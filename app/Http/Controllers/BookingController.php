@@ -7,8 +7,11 @@ use App\Models\Room;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Exports\BookingsExport;
-use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
+use Exception;
+use Carbon\Carbon;
+use App\Models\JadwalReguler;
+// Excel export removed; using PDF only
 
 class BookingController extends Controller
 {
@@ -63,22 +66,96 @@ class BookingController extends Controller
         $validated['id_user'] = Auth::id();
         $validated['status'] = 'pending'; // Default status
 
-        $booking = Booking::create($validated);
-        
-        // Create notification for admin/petugas
-        $room = Room::find($validated['id_room']);
-        $adminUsers = \App\Models\User::whereIn('role', ['admin', 'petugas'])->get();
-        
-        foreach ($adminUsers as $admin) {
-            Notification::create([
-                'user_id' => $admin->id,
-                'type' => 'booking_new',
-                'title' => 'Peminjaman Baru',
-                'message' => Auth::user()->name . ' mengajukan peminjaman ' . $room->nama_room,
-                'icon' => 'bi-calendar-plus',
-                'link' => route('bookings.index'),
-                'is_read' => false
+        // Use explicit transaction so we can control commit/rollback and logging
+        // Before creating, ensure booking does not overlap a regular schedule for the same room
+        // Iterate each date in the requested range and check JadwalReguler where hari matches
+        $start = Carbon::parse($validated['tanggal_mulai']);
+        $end = Carbon::parse($validated['tanggal_selesai']);
+        $bookingStartTime = Carbon::createFromFormat('H:i', $validated['jam_mulai'])->format('H:i:s');
+        $bookingEndTime = Carbon::createFromFormat('H:i', $validated['jam_selesai'])->format('H:i:s');
+
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            // Map Carbon day name to Indonesian enum in jadwal_reguler
+            $dayName = ucfirst($date->locale('id')->isoFormat('dddd'));
+            // isoFormat('dddd') may return lowercase; ensure first letter uppercase to match enum (e.g., 'Senin')
+            $dayName = mb_convert_case($dayName, MB_CASE_TITLE, 'UTF-8');
+
+            $regs = JadwalReguler::where('id_room', $validated['id_room'])
+                ->where('hari', $dayName)
+                ->get();
+
+            foreach ($regs as $reg) {
+                $regStart = $reg->jam_mulai; // stored as string 'HH:MM:SS'
+                $regEnd = $reg->jam_selesai;
+
+                // overlap if not (regEnd <= bookingStart OR regStart >= bookingEnd)
+                if (!(strtotime($regEnd) <= strtotime($bookingStartTime) || strtotime($regStart) >= strtotime($bookingEndTime))) {
+                    // generate alternative suggestions and return with suggestions in session
+                    $suggestionSvc = new \App\Services\BookingSuggestionService();
+                    $alternatives = $suggestionSvc->suggest(
+                        $validated['id_room'],
+                        $validated['tanggal_mulai'],
+                        $validated['tanggal_selesai'],
+                        $validated['jam_mulai'],
+                        $validated['jam_selesai'],
+                        5, // limit
+                        14, // searchDays
+                        30 // stepMinutes
+                    );
+
+                    $message = 'Waktu bentrok dengan jadwal reguler pada ' . $date->format('Y-m-d');
+                    if ($request->wantsJson()) {
+                        $html = view('bookings._alternatives', ['alternatives' => $alternatives, 'booking' => null])->render();
+                        return response()->json(['error' => $message, 'alternatives' => $alternatives, 'alternatives_html' => $html], 422);
+                    }
+                    return redirect()->back()->withInput()->with('error', $message)->with('alternatives', $alternatives);
+                }
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            // Create booking (application accepts submissions as pending)
+            $booking = Booking::create($validated);
+
+            // Create notification for admin/petugas
+            $room = Room::find($validated['id_room']);
+            $adminUsers = \App\Models\User::whereIn('role', ['admin', 'petugas'])->get();
+            foreach ($adminUsers as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'type' => 'booking_new',
+                    'title' => 'Peminjaman Baru',
+                    'message' => Auth::user()->name . ' mengajukan peminjaman ' . ($room->nama_room ?? ''),
+                    'icon' => 'bi-calendar-plus',
+                    'link' => route('bookings.index'),
+                    'is_read' => false
+                ]);
+            }
+
+            DB::commit();
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'booking_id' => $booking->id_booking, 'message' => 'Peminjaman berhasil diajukan']);
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            // Specific overlap handling
+            if ($e->getMessage() === 'overlap') {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'Waktu bentrok dengan booking lain'], 422);
+                }
+                return redirect()->back()->withInput()->with('error', 'Waktu bentrok dengan booking lain');
+            }
+
+            // Log unexpected exception for debugging
+            \Log::error('Booking store failed: ' . $e->getMessage(), [
+                'user_id' => Auth::id() ?? null,
+                'payload' => $validated,
             ]);
+
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan peminjaman');
         }
 
         return redirect()->route('bookings.index')->with('success', 'Peminjaman berhasil diajukan');
@@ -147,6 +224,100 @@ class BookingController extends Controller
     }
 
     /**
+     * Reschedule a pending booking to a chosen alternative slot.
+     */
+    public function reschedule(Request $request, string $id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        // Only peminjam owner can reschedule their own pending bookings
+        if (Auth::user()->role === 'peminjam' && ($booking->id_user !== Auth::id() || $booking->status !== 'pending')) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+            abort(403, 'Unauthorized');
+        }
+
+        $validated = $request->validate([
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'jam_mulai' => 'required|date_format:H:i',
+            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
+        ]);
+
+        // before updating, ensure no conflict with jadwal_reguler for any date in range
+        $start = Carbon::parse($validated['tanggal_mulai']);
+        $end = Carbon::parse($validated['tanggal_selesai']);
+        $bookingStartTime = Carbon::createFromFormat('H:i', $validated['jam_mulai'])->format('H:i:s');
+        $bookingEndTime = Carbon::createFromFormat('H:i', $validated['jam_selesai'])->format('H:i:s');
+
+        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+            $dayName = mb_convert_case($date->locale('id')->isoFormat('dddd'), MB_CASE_TITLE, 'UTF-8');
+            $regs = JadwalReguler::where('id_room', $booking->id_room)
+                ->where('hari', $dayName)
+                ->get();
+
+            foreach ($regs as $reg) {
+                $regStart = $reg->jam_mulai;
+                $regEnd = $reg->jam_selesai;
+                if (!(strtotime($regEnd) <= strtotime($bookingStartTime) || strtotime($regStart) >= strtotime($bookingEndTime))) {
+                    $message = 'Waktu bentrok dengan jadwal reguler pada ' . $date->format('Y-m-d');
+                    if ($request->wantsJson()) {
+                        return response()->json(['error' => $message], 422);
+                    }
+                    return redirect()->back()->withInput()->with('error', $message);
+                }
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            $booking->tanggal_mulai = $validated['tanggal_mulai'];
+            $booking->tanggal_selesai = $validated['tanggal_selesai'];
+            $booking->jam_mulai = Carbon::createFromFormat('H:i', $validated['jam_mulai'])->format('H:i:s');
+            $booking->jam_selesai = Carbon::createFromFormat('H:i', $validated['jam_selesai'])->format('H:i:s');
+            $booking->save();
+
+            DB::commit();
+
+            if ($request->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Peminjaman berhasil dijadwal ulang']);
+            }
+            return redirect()->route('bookings.index')->with('success', 'Peminjaman berhasil dijadwal ulang');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Reschedule failed: ' . $e->getMessage(), ['booking_id' => $booking->id_booking]);
+            if ($request->wantsJson()) {
+                return response()->json(['error' => 'Gagal menyimpan perubahan'], 500);
+            }
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan perubahan');
+        }
+    }
+
+    /**
+     * Cancel a pending booking (quick cancel).
+     */
+    public function cancel(Request $request, string $id)
+    {
+        $booking = Booking::findOrFail($id);
+
+        if (Auth::user()->role === 'peminjam' && ($booking->id_user !== Auth::id() || $booking->status !== 'pending')) {
+            if ($request->wantsJson()) return response()->json(['error' => 'Unauthorized'], 403);
+            abort(403, 'Unauthorized');
+        }
+
+        try {
+            $booking->delete();
+            if ($request->wantsJson()) return response()->json(['success' => true]);
+            return redirect()->route('bookings.index')->with('success', 'Peminjaman berhasil dibatalkan');
+        } catch (\Exception $e) {
+            \Log::error('Cancel booking failed: ' . $e->getMessage(), ['booking_id' => $booking->id_booking]);
+            if ($request->wantsJson()) return response()->json(['error' => 'Gagal membatalkan peminjaman'], 500);
+            return redirect()->back()->with('error', 'Gagal membatalkan peminjaman');
+        }
+    }
+
+    /**
      * Update booking status (approve/reject)
      */
     public function updateStatus(Request $request, string $id)
@@ -158,24 +329,47 @@ class BookingController extends Controller
             'catatan' => 'nullable|string',
         ]);
 
+        // If approving, prefer executing DB stored procedure to enforce DB-side checks atomically
+        if ($validated['status'] === 'approved') {
+            $service = new \App\Services\BookingApprovalService();
+            try {
+                $service->approve((int) $booking->id_booking);
+
+                // Create notification after successful approval
+                Notification::create([
+                    'user_id' => $booking->id_user,
+                    'type' => 'booking_status',
+                    'title' => 'Status Peminjaman',
+                    'message' => 'Peminjaman ' . ($booking->room->nama_room ?? '') . ' telah disetujui',
+                    'icon' => 'bi-check-circle-fill',
+                    'link' => route('bookings.show', $booking->id_booking),
+                    'is_read' => false
+                ]);
+
+                return redirect()->back()->with('success', 'Peminjaman disetujui');
+            } catch (\Exception $e) {
+                // Detect overlap or approve_failed signals
+                if ($e->getMessage() === 'overlap' || str_contains($e->getMessage(), 'overlap') || str_contains($e->getMessage(), 'approve_failed')) {
+                    return redirect()->back()->with('error', 'Waktu bentrok dengan booking lain');
+                }
+                \Log::error('Procedure approve_booking failed: ' . $e->getMessage(), ['booking_id' => $booking->id_booking]);
+                return redirect()->back()->with('error', 'Gagal mengubah status peminjaman');
+            }
+        }
+
+        // For non-approved status changes (rejected), keep the simple update
         $booking->update($validated);
-        
-        // Create notification for the user who made the booking
-        $statusText = $validated['status'] === 'approved' ? 'disetujui' : 'ditolak';
-        $statusIcon = $validated['status'] === 'approved' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
-        
         Notification::create([
             'user_id' => $booking->id_user,
             'type' => 'booking_status',
             'title' => 'Status Peminjaman',
-            'message' => 'Peminjaman ' . $booking->room->nama_room . ' telah ' . $statusText,
-            'icon' => $statusIcon,
+            'message' => 'Peminjaman ' . ($booking->room->nama_room ?? '') . ' telah ditolak',
+            'icon' => 'bi-x-circle-fill',
             'link' => route('bookings.show', $booking->id_booking),
             'is_read' => false
         ]);
 
-        $message = $validated['status'] === 'approved' ? 'Peminjaman disetujui' : 'Peminjaman ditolak';
-        return redirect()->back()->with('success', $message);
+        return redirect()->back()->with('success', 'Peminjaman ditolak');
     }
 
     /**
@@ -218,7 +412,7 @@ class BookingController extends Controller
     }
 
     /**
-     * Export bookings to Excel
+     * Export bookings to Excel or PDF
      */
     public function export(Request $request)
     {
@@ -230,13 +424,38 @@ class BookingController extends Controller
         $validated = $request->validate([
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
+            'format' => 'nullable|in:excel,pdf'
         ]);
 
         $startDate = $validated['start_date'];
         $endDate = $validated['end_date'];
+        $format = $validated['format'] ?? 'excel';
+
+        if ($format === 'pdf') {
+            // Generate PDF using a blade view (guard if package not installed)
+            $bookings = Booking::with(['user', 'room'])
+                ->whereBetween('tanggal_mulai', [$startDate, $endDate])
+                ->orderBy('tanggal_mulai', 'desc')
+                ->get();
+
+            // Check if DomPDF binding or class exists to avoid runtime error
+            if (!app()->bound('dompdf.wrapper') && !class_exists(\Barryvdh\DomPDF\PDF::class)) {
+                return redirect()->back()->with('error', 'PDF generator tidak tersedia. Install barryvdh/laravel-dompdf atau gunakan export Excel.');
+            }
+
+            // Prefer the common binding name if present
+            if (app()->bound('dompdf.wrapper')) {
+                $pdf = app('dompdf.wrapper');
+            } else {
+                $pdf = app()->make(\Barryvdh\DomPDF\PDF::class);
+            }
+            $pdf->loadView('bookings.pdf', compact('bookings', 'startDate', 'endDate'));
+
+            $filename = 'Laporan_Peminjaman_' . date('Ymd_His') . '.pdf';
+            return $pdf->download($filename);
+        }
 
         $filename = 'Laporan_Peminjaman_' . date('Ymd_His') . '.xlsx';
-
         return Excel::download(new BookingsExport($startDate, $endDate), $filename);
     }
 }

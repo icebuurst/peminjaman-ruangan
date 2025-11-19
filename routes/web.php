@@ -55,6 +55,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/bookings/{booking}/edit', [BookingController::class, 'edit'])->name('bookings.edit');
         Route::put('/bookings/{booking}', [BookingController::class, 'update'])->name('bookings.update');
         Route::delete('/bookings/{booking}', [BookingController::class, 'destroy'])->name('bookings.destroy');
+    // Reschedule and cancel (peminjam only)
+    Route::post('/bookings/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('bookings.reschedule');
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
     });
     
     // View detail - all can access (MUST BE AFTER /bookings/create!)
