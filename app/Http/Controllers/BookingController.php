@@ -331,6 +331,49 @@ class BookingController extends Controller
 
         // If approving, prefer executing DB stored procedure to enforce DB-side checks atomically
         if ($validated['status'] === 'approved') {
+            // Application-level overlap check to provide clearer feedback before calling stored procedure
+            $startDate = $booking->tanggal_mulai;
+            $endDate = $booking->tanggal_selesai;
+            $startTime = $booking->jam_mulai;
+            $endTime = $booking->jam_selesai;
+
+            // Find approved bookings that overlap this booking's time/window
+            $conflicts = \DB::table('booking')
+                ->select('id_booking','id_user','tanggal_mulai','jam_mulai','tanggal_selesai','jam_selesai','status')
+                ->where('id_room', $booking->id_room)
+                ->where('status', 'approved')
+                ->whereRaw("NOT (CONCAT(tanggal_selesai,' ',jam_selesai) <= CONCAT(?, ' ', ?) OR CONCAT(tanggal_mulai,' ',jam_mulai) >= CONCAT(?, ' ', ?))", [$startDate, $startTime, $endDate, $endTime])
+                ->get();
+
+            if ($conflicts->isNotEmpty()) {
+                // return details so admin can see what's blocking
+                $message = 'Tidak dapat menyetujui: terdapat peminjaman lain yang sudah disetujui dan waktunya tumpang tindih.';
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => $message, 'conflicts' => $conflicts], 422);
+                }
+                return redirect()->back()->with('error', $message)->with('conflicts', $conflicts);
+            }
+
+            // Also check jadwal_reguler conflicts for the booking's date range
+            $start = \Carbon\Carbon::parse($booking->tanggal_mulai);
+            $end = \Carbon\Carbon::parse($booking->tanggal_selesai);
+            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                $dayName = mb_convert_case($date->locale('id')->isoFormat('dddd'), MB_CASE_TITLE, 'UTF-8');
+                $regs = JadwalReguler::where('id_room', $booking->id_room)
+                    ->where('hari', $dayName)
+                    ->get();
+                foreach ($regs as $reg) {
+                    if (!(strtotime($reg->jam_selesai) <= strtotime($booking->jam_mulai) || strtotime($reg->jam_mulai) >= strtotime($booking->jam_selesai))) {
+                        $message = 'Tidak dapat menyetujui: bentrok dengan jadwal reguler pada ' . $date->format('Y-m-d');
+                        if ($request->wantsJson()) {
+                            return response()->json(['error' => $message, 'reguler' => $reg], 422);
+                        }
+                        return redirect()->back()->with('error', $message)->with('reguler_conflict', $reg);
+                    }
+                }
+            }
+
+            // No obvious conflicts at app level — proceed with stored procedure for atomic approval
             $service = new \App\Services\BookingApprovalService();
             try {
                 $service->approve((int) $booking->id_booking);
@@ -348,9 +391,9 @@ class BookingController extends Controller
 
                 return redirect()->back()->with('success', 'Peminjaman disetujui');
             } catch (\Exception $e) {
-                // Detect overlap or approve_failed signals
+                // Catch DB-level rejections (should be rare now) and surface message
                 if ($e->getMessage() === 'overlap' || str_contains($e->getMessage(), 'overlap') || str_contains($e->getMessage(), 'approve_failed')) {
-                    return redirect()->back()->with('error', 'Waktu bentrok dengan booking lain');
+                    return redirect()->back()->with('error', 'Waktu bentrok dengan booking lain (ditolak oleh DB)');
                 }
                 \Log::error('Procedure approve_booking failed: ' . $e->getMessage(), ['booking_id' => $booking->id_booking]);
                 return redirect()->back()->with('error', 'Gagal mengubah status peminjaman');
