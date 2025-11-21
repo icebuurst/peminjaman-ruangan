@@ -405,10 +405,32 @@ class BookingController extends Controller
                 }
             }
 
-            // No obvious conflicts at app level — proceed with stored procedure for atomic approval
-            $service = new \App\Services\BookingApprovalService();
+            // No obvious conflicts at app level — proceed with approval
+            // Try using stored procedure first, fallback to direct update if procedure doesn't exist
+            DB::beginTransaction();
             try {
-                $service->approve((int) $booking->id_booking);
+                // Check if stored procedure exists
+                $procedureExists = DB::select("
+                    SELECT ROUTINE_NAME 
+                    FROM information_schema.ROUTINES 
+                    WHERE ROUTINE_SCHEMA = DATABASE() 
+                    AND ROUTINE_NAME = 'approve_booking'
+                ");
+                
+                if (!empty($procedureExists)) {
+                    // Use stored procedure if available
+                    $service = new \App\Services\BookingApprovalService();
+                    $service->approve((int) $booking->id_booking);
+                } else {
+                    // Fallback to direct update if procedure doesn't exist
+                    $booking->status = 'approved';
+                    if (isset($validated['catatan'])) {
+                        $booking->catatan = $validated['catatan'];
+                    }
+                    $booking->save();
+                }
+                
+                DB::commit();
 
                 // Create notification after successful approval
                 Notification::create([
@@ -423,22 +445,23 @@ class BookingController extends Controller
 
                 return redirect()->back()->with('success', 'Peminjaman disetujui');
             } catch (\Exception $e) {
-                // Catch DB-level rejections (should be rare now) and surface message
+                DB::rollBack();
+                
+                // Catch DB-level rejections
                 if ($e->getMessage() === 'overlap' || str_contains($e->getMessage(), 'overlap') || str_contains($e->getMessage(), 'approve_failed')) {
                     return redirect()->back()->with('error', 'Waktu bentrok dengan booking lain (ditolak oleh DB)');
                 }
                 
                 // Log detailed error information
-                \Log::error('Procedure approve_booking failed', [
+                \Log::error('Booking approval failed', [
                     'booking_id' => $booking->id_booking,
                     'error_message' => $e->getMessage(),
                     'error_code' => $e->getCode(),
                     'error_file' => $e->getFile(),
                     'error_line' => $e->getLine(),
-                    'trace' => $e->getTraceAsString()
                 ]);
                 
-                return redirect()->back()->with('error', 'Gagal mengubah status peminjaman: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'Gagal approve: ' . $e->getMessage());
             }
         }
 
