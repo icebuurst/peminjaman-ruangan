@@ -291,13 +291,14 @@
                 <!-- Room Image -->
                 <div class="room-image-container">
                     @if($room->foto)
-                    <img src="{{ (\Illuminate\Support\Facades\Storage::disk('public')->exists($room->foto) ? \Illuminate\Support\Facades\Storage::disk('public')->url($room->foto) : asset('images/placeholder-room.svg')) }}" 
-                    alt="{{ $room->nama_room }}" 
-                    class="room-image">
-                @else
-                    <div class="room-image d-flex align-items-center justify-content-center">
-                        <i class="bi bi-door-open" style="font-size: 4rem; color: #b2b2b2;"></i>
-                    </div>
+                        <img src="{{ asset('storage/' . $room->foto) }}" 
+                             alt="{{ $room->nama_room }}" 
+                             class="room-image"
+                             onerror="this.onerror=null; this.src='{{ asset('images/placeholder-room.svg') }}';">
+                    @else
+                        <div class="room-image d-flex align-items-center justify-content-center">
+                            <i class="bi bi-door-open" style="font-size: 4rem; color: #b2b2b2;"></i>
+                        </div>
                     @endif
                     
                     <!-- Availability Badge -->

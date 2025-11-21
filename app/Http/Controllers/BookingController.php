@@ -52,6 +52,38 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
+        // Normalize time inputs: accept H:i:s, H:i or h:i A (AM/PM)
+        $normalizeTime = function ($value) {
+            if (is_null($value) || $value === '') return $value;
+
+            // If already H:i:s or H:i, try to parse directly
+            try {
+                $d = Carbon::createFromFormat('H:i:s', $value);
+                return $d->format('H:i');
+            } catch (\Exception $e) {
+                // try H:i
+                try {
+                    $d = Carbon::createFromFormat('H:i', $value);
+                    return $d->format('H:i');
+                } catch (\Exception $e) {
+                    // try AM/PM
+                    try {
+                        $d = Carbon::createFromFormat('h:i A', $value);
+                        return $d->format('H:i');
+                    } catch (\Exception $e) {
+                        return $value; // leave for validator to handle
+                    }
+                }
+            }
+        };
+
+        if ($request->has('jam_mulai')) {
+            $request->merge(['jam_mulai' => $normalizeTime($request->input('jam_mulai'))]);
+        }
+        if ($request->has('jam_selesai')) {
+            $request->merge(['jam_selesai' => $normalizeTime($request->input('jam_selesai'))]);
+        }
+
         $validated = $request->validate([
             'id_room' => 'required|exists:room,id_room',
             'keperluan' => 'required|string|max:255',

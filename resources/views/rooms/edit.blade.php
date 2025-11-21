@@ -60,7 +60,11 @@
                             <label for="foto" class="form-label">Foto Ruangan</label>
                             @if($room->foto)
                             <div class="mb-2">
-                                <img src="{{ (\Illuminate\Support\Facades\Storage::disk('public')->exists($room->foto) ? \Illuminate\Support\Facades\Storage::disk('public')->url($room->foto) : asset('images/placeholder-room.svg')) }}" alt="{{ $room->nama_room }}" class="img-thumbnail" style="max-height: 150px;">
+                                <img src="{{ asset('storage/' . $room->foto) }}" 
+                                     alt="{{ $room->nama_room }}" 
+                                     class="img-thumbnail" 
+                                     style="max-height: 150px;"
+                                     onerror="this.onerror=null; this.src='{{ asset('images/placeholder-room.svg') }}';">
                                 <small class="d-block text-muted">Foto saat ini</small>
                             </div>
                             @endif

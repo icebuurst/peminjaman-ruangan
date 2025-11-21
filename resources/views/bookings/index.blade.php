@@ -325,15 +325,9 @@
                 
                 <div class="d-flex gap-2 flex-wrap">
                     <a href="{{ route('bookings.show', $booking->id_booking) }}" 
-                       class="btn btn-modern btn-outline-modern flex-grow-1">
+                       class="btn btn-modern btn-primary-modern w-100">
                         <i class="bi bi-eye"></i> Detail
                     </a>
-                    @if(Auth::user()->role !== 'peminjam' && $booking->status == 'pending')
-                    <a href="{{ route('bookings.edit', $booking->id_booking) }}" 
-                       class="btn btn-modern btn-primary-modern">
-                        <i class="bi bi-pencil"></i> Review
-                    </a>
-                    @endif
                 </div>
             </div>
         </div>
