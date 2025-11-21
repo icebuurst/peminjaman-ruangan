@@ -427,23 +427,26 @@ class BookingController extends Controller
                     if (isset($validated['catatan'])) {
                         $booking->catatan = $validated['catatan'];
                     }
+                    
+                    // Set confirmation deadline (12 hours from now)
+                    $booking->confirmation_deadline = now()->addHours(12);
                     $booking->save();
                 }
                 
                 DB::commit();
 
-                // Create notification after successful approval
+                // Create notification after successful approval - Need confirmation from user
                 Notification::create([
                     'user_id' => $booking->id_user,
-                    'type' => 'booking_status',
-                    'title' => 'Status Peminjaman',
-                    'message' => 'Peminjaman ' . ($booking->room->nama_room ?? '') . ' telah disetujui',
-                    'icon' => 'bi-check-circle-fill',
+                    'type' => 'booking_confirmation_needed',
+                    'title' => 'Konfirmasi Peminjaman Diperlukan',
+                    'message' => 'Peminjaman ' . ($booking->room->nama_room ?? '') . ' telah disetujui. Harap konfirmasi dalam 12 jam.',
+                    'icon' => 'bi-exclamation-circle-fill',
                     'link' => route('bookings.show', $booking->id_booking),
                     'is_read' => false
                 ]);
 
-                return redirect()->back()->with('success', 'Peminjaman disetujui');
+                return redirect()->back()->with('success', 'Peminjaman disetujui. Menunggu konfirmasi dari peminjam (12 jam).');
             } catch (\Exception $e) {
                 DB::rollBack();
                 
@@ -565,5 +568,101 @@ class BookingController extends Controller
 
         $filename = 'Laporan_Peminjaman_' . date('Ymd_His') . '.xlsx';
         return Excel::download(new BookingsExport($startDate, $endDate), $filename);
+    }
+
+    /**
+     * Confirm booking by peminjam (after approval)
+     */
+    public function confirm($id)
+    {
+        $booking = Booking::findOrFail($id);
+        
+        // Authorization: Only the booking owner can confirm
+        if (auth()->id() !== $booking->id_user) {
+            abort(403, 'Anda tidak memiliki akses untuk mengkonfirmasi peminjaman ini');
+        }
+
+        // Check if booking is in approved status and awaiting confirmation
+        if ($booking->status !== 'approved') {
+            return redirect()->back()->with('error', 'Peminjaman ini tidak memerlukan konfirmasi');
+        }
+
+        // Check if confirmation deadline has passed
+        if ($booking->isConfirmationExpired()) {
+            return redirect()->back()->with('error', 'Batas waktu konfirmasi telah berakhir');
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            $booking->status = Booking::STATUS_CONFIRMED;
+            $booking->confirmed_at = now();
+            $booking->save();
+
+            // Notify admin/petugas
+            $adminUsers = User::whereIn('role', ['admin', 'petugas'])->get();
+            foreach ($adminUsers as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'type' => 'booking_confirmed',
+                    'title' => 'Peminjaman Dikonfirmasi',
+                    'message' => 'Peminjaman ruangan ' . $booking->room->nama_room . ' oleh ' . $booking->user->name . ' telah dikonfirmasi',
+                    'icon' => 'bi-check-circle-fill',
+                    'link' => route('bookings.show', $booking->id_booking),
+                    'is_read' => false
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Peminjaman berhasil dikonfirmasi!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal mengkonfirmasi peminjaman: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Decline/Cancel booking by peminjam (after approval)
+     */
+    public function decline($id)
+    {
+        $booking = Booking::findOrFail($id);
+        
+        // Authorization: Only the booking owner can decline
+        if (auth()->id() !== $booking->id_user) {
+            abort(403, 'Anda tidak memiliki akses untuk membatalkan peminjaman ini');
+        }
+
+        // Check if booking is in approved status
+        if ($booking->status !== 'approved') {
+            return redirect()->back()->with('error', 'Peminjaman ini tidak dapat dibatalkan');
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            $booking->status = Booking::STATUS_CANCELLED_BY_USER;
+            $booking->save();
+
+            // Notify admin/petugas
+            $adminUsers = User::whereIn('role', ['admin', 'petugas'])->get();
+            foreach ($adminUsers as $admin) {
+                Notification::create([
+                    'user_id' => $admin->id,
+                    'type' => 'booking_cancelled',
+                    'title' => 'Peminjaman Dibatalkan User',
+                    'message' => 'Peminjaman ruangan ' . $booking->room->nama_room . ' oleh ' . $booking->user->name . ' dibatalkan oleh user',
+                    'icon' => 'bi-x-circle-fill',
+                    'link' => route('bookings.show', $booking->id_booking),
+                    'is_read' => false
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Gagal membatalkan peminjaman: ' . $e->getMessage());
+        }
     }
 }

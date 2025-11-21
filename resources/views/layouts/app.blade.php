@@ -158,9 +158,26 @@
             border: 1px solid var(--color-cyan);
         }
         
+        .badge-confirmed {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
         .badge-rejected {
             background: #fee2e2;
             color: #991b1b;
+        }
+        
+        .badge-cancelled_by_user {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-expired {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #9ca3af;
         }
         
         .alert {

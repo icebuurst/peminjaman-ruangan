@@ -21,12 +21,26 @@ class Booking extends Model
         'jumlah_peserta',
         'status',
         'catatan',
+        'confirmed_at',
+        'confirmation_deadline',
+        'last_reminder_sent_at',
     ];
 
     protected $casts = [
         'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
+        'confirmed_at' => 'datetime',
+        'confirmation_deadline' => 'datetime',
+        'last_reminder_sent_at' => 'datetime',
     ];
+
+    // Status constants
+    const STATUS_PENDING = 'pending';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_CONFIRMED = 'confirmed';
+    const STATUS_CANCELLED_BY_USER = 'cancelled_by_user';
+    const STATUS_EXPIRED = 'expired';
 
     /**
      * Relasi dengan user
@@ -42,5 +56,44 @@ class Booking extends Model
     public function room()
     {
         return $this->belongsTo(Room::class, 'id_room', 'id_room');
+    }
+
+    /**
+     * Check if booking is awaiting confirmation
+     */
+    public function isAwaitingConfirmation()
+    {
+        return $this->status === self::STATUS_APPROVED 
+            && is_null($this->confirmed_at)
+            && !is_null($this->confirmation_deadline);
+    }
+
+    /**
+     * Check if confirmation deadline has passed
+     */
+    public function isConfirmationExpired()
+    {
+        return $this->isAwaitingConfirmation() 
+            && now()->isAfter($this->confirmation_deadline);
+    }
+
+    /**
+     * Check if booking needs confirmation
+     */
+    public function needsConfirmation()
+    {
+        return $this->isAwaitingConfirmation() && !$this->isConfirmationExpired();
+    }
+
+    /**
+     * Get remaining time for confirmation in hours
+     */
+    public function getConfirmationRemainingHours()
+    {
+        if (!$this->needsConfirmation()) {
+            return 0;
+        }
+        
+        return now()->diffInHours($this->confirmation_deadline, false);
     }
 }

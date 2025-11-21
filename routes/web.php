@@ -58,6 +58,10 @@ Route::middleware('auth')->group(function () {
     // Reschedule and cancel (peminjam only)
     Route::post('/bookings/{booking}/reschedule', [BookingController::class, 'reschedule'])->name('bookings.reschedule');
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel'])->name('bookings.cancel');
+    
+    // Confirm and decline (peminjam only - after approval)
+    Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm'])->name('bookings.confirm');
+    Route::post('/bookings/{booking}/decline', [BookingController::class, 'decline'])->name('bookings.decline');
     });
     
     // View detail - all can access (MUST BE AFTER /bookings/create!)

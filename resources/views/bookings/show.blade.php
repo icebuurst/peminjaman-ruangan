@@ -15,7 +15,21 @@
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <span><i class="bi bi-info-circle me-2"></i>Informasi Peminjaman</span>
                     <span class="badge-status badge-{{ $booking->status }}">
-                        {{ ucfirst($booking->status) }}
+                        @if($booking->status === 'pending')
+                            Menunggu Persetujuan
+                        @elseif($booking->status === 'approved')
+                            Disetujui - Menunggu Konfirmasi
+                        @elseif($booking->status === 'confirmed')
+                            Dikonfirmasi
+                        @elseif($booking->status === 'rejected')
+                            Ditolak
+                        @elseif($booking->status === 'cancelled_by_user')
+                            Dibatalkan User
+                        @elseif($booking->status === 'expired')
+                            Kadaluarsa
+                        @else
+                            {{ ucfirst($booking->status) }}
+                        @endif
                     </span>
                 </div>
                 <div class="card-body">
@@ -167,6 +181,42 @@
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                                 <button type="submit" class="btn btn-danger">Tolak</button>
                             </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <!-- Confirmation Required (Peminjam) -->
+            @if(Auth::user()->role === 'peminjam' && $booking->status === 'approved' && $booking->needsConfirmation())
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Konfirmasi Diperlukan
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning mb-3">
+                        <strong>Perhatian!</strong> Peminjaman Anda telah disetujui. 
+                        Silakan konfirmasi apakah Anda jadi menggunakan ruangan atau tidak.
+                        <hr>
+                        <small class="text-dark">
+                            <i class="bi bi-clock-fill me-1"></i>
+                            <strong>Batas waktu:</strong> {{ $booking->confirmation_deadline->format('d M Y H:i') }}
+                            ({{ abs($booking->getConfirmationRemainingHours()) }} jam lagi)
+                        </small>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <form action="{{ route('bookings.confirm', $booking->id_booking) }}" method="POST" class="flex-fill">
+                            @csrf
+                            <button type="submit" class="btn btn-success w-100" onclick="return confirm('Apakah Anda yakin akan menggunakan ruangan ini?')">
+                                <i class="bi bi-check-circle-fill me-2"></i>Ya, Saya Jadi
+                            </button>
+                        </form>
+                        <form action="{{ route('bookings.decline', $booking->id_booking) }}" method="POST" class="flex-fill">
+                            @csrf
+                            <button type="submit" class="btn btn-danger w-100" onclick="return confirm('Apakah Anda yakin membatalkan peminjaman ini?')">
+                                <i class="bi bi-x-circle-fill me-2"></i>Tidak Jadi
+                            </button>
                         </form>
                     </div>
                 </div>

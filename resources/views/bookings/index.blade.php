@@ -82,7 +82,11 @@
         border-left-color: #fbbf24;
     }
     
-    .booking-card-modern.status-approved,
+    .booking-card-modern.status-approved {
+        border-left-color: #f59e0b;
+    }
+    
+    .booking-card-modern.status-confirmed,
     .booking-card-modern.status-disetujui {
         border-left-color: #10b981;
     }
@@ -90,6 +94,14 @@
     .booking-card-modern.status-rejected,
     .booking-card-modern.status-ditolak {
         border-left-color: #ef4444;
+    }
+    
+    .booking-card-modern.status-cancelled_by_user {
+        border-left-color: #fbbf24;
+    }
+    
+    .booking-card-modern.status-expired {
+        border-left-color: #9ca3af;
     }
     
     .user-info-modern {
@@ -158,7 +170,12 @@
         color: #92400e;
     }
     
-    .status-badge-large.approved,
+    .status-badge-large.approved {
+        background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+        color: #9a3412;
+    }
+    
+    .status-badge-large.confirmed,
     .status-badge-large.disetujui {
         background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
         color: #065f46;
@@ -168,6 +185,16 @@
     .status-badge-large.ditolak {
         background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
         color: #991b1b;
+    }
+    
+    .status-badge-large.cancelled_by_user {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #92400e;
+    }
+    
+    .status-badge-large.expired {
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        color: #374151;
     }
 </style>
 
@@ -266,10 +293,18 @@
                     <span class="status-badge-large {{ $booking->status }}">
                         @if($booking->status == 'pending')
                             <i class="bi bi-hourglass-split"></i> Pending
-                        @elseif(in_array($booking->status, ['approved', 'disetujui']))
-                            <i class="bi bi-check-circle-fill"></i> Disetujui
-                        @else
+                        @elseif($booking->status == 'approved')
+                            <i class="bi bi-exclamation-circle-fill"></i> Butuh Konfirmasi
+                        @elseif($booking->status == 'confirmed')
+                            <i class="bi bi-check-circle-fill"></i> Dikonfirmasi
+                        @elseif($booking->status == 'rejected')
                             <i class="bi bi-x-circle-fill"></i> Ditolak
+                        @elseif($booking->status == 'cancelled_by_user')
+                            <i class="bi bi-x-circle"></i> Dibatalkan
+                        @elseif($booking->status == 'expired')
+                            <i class="bi bi-clock-history"></i> Kadaluarsa
+                        @else
+                            {{ ucfirst($booking->status) }}
                         @endif
                     </span>
                 </div>

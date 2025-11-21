@@ -175,6 +175,117 @@
         color: #191919;
         transform: translateY(-2px);
     }
+
+    /* Quick Filter Buttons */
+    .btn-quick-filter {
+        background: linear-gradient(135deg, #f0fdff 0%, #e0f9ff 100%);
+        border: 2px solid #bae6fd;
+        color: #191919;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .btn-quick-filter:hover {
+        background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%);
+        border-color: #1ceff4;
+        color: #191919;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(28, 239, 244, 0.3);
+    }
+
+    .btn-quick-filter i {
+        font-size: 1rem;
+    }
+
+    /* Insight Cards */
+    .insight-card {
+        background: white;
+        border-radius: 14px;
+        padding: 1.25rem;
+        border: 1px solid #e8edf2;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .insight-card:hover {
+        border-color: #1ceff4;
+        box-shadow: 0 4px 12px rgba(28, 239, 244, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .insight-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .insight-label {
+        font-size: 0.8rem;
+        color: #808080;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+
+    .insight-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #191919;
+        line-height: 1.2;
+        margin-bottom: 0.25rem;
+    }
+
+    .insight-meta {
+        font-size: 0.85rem;
+        color: #808080;
+        font-weight: 500;
+    }
+
+    /* Export Card */
+    .export-card {
+        background: white;
+        border: 2px dashed #e8edf2;
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .export-card:hover {
+        border-color: #1ceff4;
+        background: linear-gradient(135deg, rgba(28, 239, 244, 0.02) 0%, rgba(28, 239, 244, 0.05) 100%);
+    }
+
+    .btn-export-pdf {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        color: #991b1b;
+        border: none;
+        padding: 0.65rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-export-pdf:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(153, 27, 27, 0.2);
+        color: #7f1d1d;
+    }
 </style>
 
 <div class="container-fluid px-4 py-3">
@@ -193,18 +304,49 @@
             <span>Filter Laporan</span>
         </div>
         <div class="p-4">
+            <!-- Quick Filter Presets -->
+            <div class="mb-3">
+                <label class="form-label" style="font-weight: 600; color: #191919; font-size: 0.85rem; margin-bottom: 0.75rem;">
+                    <i class="bi bi-lightning-fill me-1" style="color: #fbbf24;"></i>Quick Filter
+                </label>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button type="button" class="btn-quick-filter" onclick="setQuickFilter('today')">
+                        <i class="bi bi-calendar-day"></i> Hari Ini
+                    </button>
+                    <button type="button" class="btn-quick-filter" onclick="setQuickFilter('week')">
+                        <i class="bi bi-calendar-week"></i> 7 Hari Terakhir
+                    </button>
+                    <button type="button" class="btn-quick-filter" onclick="setQuickFilter('month')">
+                        <i class="bi bi-calendar-month"></i> Bulan Ini
+                    </button>
+                    <button type="button" class="btn-quick-filter" onclick="setQuickFilter('lastmonth')">
+                        <i class="bi bi-calendar3"></i> Bulan Lalu
+                    </button>
+                    <button type="button" class="btn-quick-filter" onclick="setQuickFilter('year')">
+                        <i class="bi bi-calendar-range"></i> Tahun Ini
+                    </button>
+                </div>
+            </div>
+
+            <hr style="border-color: #e9ecef; margin: 1.5rem 0;">
+
+            <!-- Date Range Selector -->
             <form action="{{ route('bookings.laporan') }}" method="GET" id="filterForm">
                 <div class="row align-items-end">
                     <div class="col-md-4 mb-3 mb-md-0">
                         <div class="date-input-modern">
-                            <label for="start_date">Tanggal Mulai</label>
+                            <label for="start_date">
+                                <i class="bi bi-calendar-check me-1" style="color: #1ceff4;"></i>Tanggal Mulai
+                            </label>
                             <input type="date" class="form-control" id="start_date" name="start_date" 
                                    value="{{ $startDate }}" required>
                         </div>
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
                         <div class="date-input-modern">
-                            <label for="end_date">Tanggal Selesai</label>
+                            <label for="end_date">
+                                <i class="bi bi-calendar-x me-1" style="color: #1ceff4;"></i>Tanggal Selesai
+                            </label>
                             <input type="date" class="form-control" id="end_date" name="end_date" 
                                    value="{{ $endDate }}" required>
                         </div>
@@ -219,6 +361,22 @@
                                 <i class="bi bi-arrow-clockwise"></i>
                                 Reset
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Range Indicator -->
+                <div class="mt-3 p-3" style="background: linear-gradient(135deg, #f0fdff 0%, #e0f9ff 100%); border-radius: 12px; border-left: 4px solid #1ceff4;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-range-fill" style="color: #1ceff4; font-size: 1.25rem;"></i>
+                        <div>
+                            <div style="font-size: 0.75rem; color: #808080; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Periode Dipilih</div>
+                            <div style="font-size: 0.95rem; color: #191919; font-weight: 700;" id="selectedPeriod">
+                                {{ \Carbon\Carbon::parse($startDate)->format('d M Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d M Y') }}
+                            </div>
+                            <div style="font-size: 0.8rem; color: #808080;" id="daysDuration">
+                                <i class="bi bi-clock me-1"></i>{{ \Carbon\Carbon::parse($startDate)->diffInDays(\Carbon\Carbon::parse($endDate)) + 1 }} hari
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -266,24 +424,91 @@
         </div>
     </div>
 
-    <!-- Export Button -->
+    <!-- Data Insights -->
     @if($bookings->count() > 0)
+    <div class="row g-3 mb-4" data-aos="fade-up">
+        <!-- Most Booked Room -->
+        @php
+            $mostBookedRoom = $bookings->groupBy('id_room')->sortByDesc(function($group) {
+                return $group->count();
+            })->first();
+            $approvalRate = $bookings->count() > 0 ? round(($bookings->where('status', 'approved')->count() / $bookings->count()) * 100, 1) : 0;
+            $avgParticipants = $bookings->where('jumlah_peserta', '>', 0)->avg('jumlah_peserta');
+        @endphp
+        
+        <div class="col-md-4">
+            <div class="insight-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="insight-icon" style="background: rgba(139, 92, 246, 0.1);">
+                        <i class="bi bi-trophy-fill" style="color: #8b5cf6;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="insight-label">Ruangan Terpopuler</div>
+                        <div class="insight-value">{{ $mostBookedRoom ? $mostBookedRoom->first()->room->nama_room : '-' }}</div>
+                        <div class="insight-meta">{{ $mostBookedRoom ? $mostBookedRoom->count() : 0 }} peminjaman</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approval Rate -->
+        <div class="col-md-4">
+            <div class="insight-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="insight-icon" style="background: rgba(16, 185, 129, 0.1);">
+                        <i class="bi bi-graph-up-arrow" style="color: #10b981;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="insight-label">Tingkat Persetujuan</div>
+                        <div class="insight-value">{{ $approvalRate }}%</div>
+                        <div class="insight-meta">dari total peminjaman</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avg Participants -->
+        <div class="col-md-4">
+            <div class="insight-card">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="insight-icon" style="background: rgba(251, 191, 36, 0.1);">
+                        <i class="bi bi-people-fill" style="color: #fbbf24;"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="insight-label">Rata-rata Peserta</div>
+                        <div class="insight-value">{{ $avgParticipants ? round($avgParticipants) : 0 }}</div>
+                        <div class="insight-meta">orang per peminjaman</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Section -->
     <div class="mb-4" data-aos="fade-up">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-            <form action="{{ route('bookings.export') }}" method="GET" class="m-0">
-                <input type="hidden" name="start_date" value="{{ $startDate }}">
-                <input type="hidden" name="end_date" value="{{ $endDate }}">
-                <input type="hidden" name="format" value="pdf">
-                <button type="submit" class="btn" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; border: none; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
-                    <i class="bi bi-file-earmark-pdf-fill"></i>
-                    Export ke PDF
-                </button>
-            </form>
-            <div class="d-flex align-items-center gap-2" style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 50px;">
-                <i class="bi bi-info-circle-fill" style="color: #1ceff4;"></i>
-                <span style="color: #808080; font-size: 0.9rem; font-weight: 500;">
-                    Total <strong style="color: #191919;">{{ $bookings->count() }}</strong> data akan di-export
-                </span>
+        <div class="export-card">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-download" style="color: #991b1b; font-size: 1.5rem;"></i>
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: #191919; font-size: 1.05rem;">Export Laporan</div>
+                        <div style="font-size: 0.85rem; color: #808080;">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            {{ $bookings->count() }} data siap untuk di-export
+                        </div>
+                    </div>
+                </div>
+                <form action="{{ route('bookings.export') }}" method="GET" class="m-0">
+                    <input type="hidden" name="start_date" value="{{ $startDate }}">
+                    <input type="hidden" name="end_date" value="{{ $endDate }}">
+                    <input type="hidden" name="format" value="pdf">
+                    <button type="submit" class="btn btn-export-pdf">
+                        <i class="bi bi-file-earmark-pdf-fill"></i>
+                        Export PDF
+                    </button>
+                </form>
             </div>
         </div>
     </div>
@@ -292,14 +517,22 @@
     <!-- Data Table -->
     <div class="card" style="background: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: none; overflow: hidden;" data-aos="fade-up">
         <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; padding: 1.25rem 1.5rem;">
-            <div class="d-flex justify-content-between align-items-center">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-2">
                     <i class="bi bi-table" style="color: #1ceff4; font-size: 1.25rem;"></i>
                     <span style="font-weight: 700; color: #191919; font-size: 1.05rem;">Preview Data Peminjaman</span>
                 </div>
-                <span class="badge" style="background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%); color: #191919; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600;">
-                    {{ $bookings->count() }} data
-                </span>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Search Box -->
+                    <div class="position-relative" style="min-width: 250px;">
+                        <i class="bi bi-search position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); color: #808080;"></i>
+                        <input type="text" id="tableSearch" class="form-control" placeholder="Cari data..." onkeyup="searchTable()" 
+                               style="border: 2px solid #e9ecef; border-radius: 12px; padding: 0.5rem 0.75rem 0.5rem 2.5rem; font-size: 0.9rem;">
+                    </div>
+                    <span class="badge" style="background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%); color: #191919; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600;">
+                        {{ $bookings->count() }} data
+                    </span>
+                </div>
             </div>
         </div>
         <div class="card-body p-0">
@@ -476,8 +709,8 @@
 </style>
 
 <script>
+// Reset Filter
 function resetFilter() {
-    // Set to current month
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -488,7 +721,40 @@ function resetFilter() {
     document.getElementById('filterForm').submit();
 }
 
-// Validate end_date >= start_date
+// Quick Filter Presets
+function setQuickFilter(period) {
+    const now = new Date();
+    let startDate, endDate;
+    
+    switch(period) {
+        case 'today':
+            startDate = endDate = now;
+            break;
+        case 'week':
+            startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            endDate = now;
+            break;
+        case 'month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'lastmonth':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+            break;
+        case 'year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            endDate = new Date(now.getFullYear(), 11, 31);
+            break;
+    }
+    
+    document.getElementById('start_date').value = startDate.toISOString().split('T')[0];
+    document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+    
+    document.getElementById('filterForm').submit();
+}
+
+// Date Validation
 document.getElementById('start_date').addEventListener('change', function() {
     const startDate = this.value;
     document.getElementById('end_date').min = startDate;
@@ -503,6 +769,33 @@ document.getElementById('end_date').addEventListener('change', function() {
         this.value = startDate;
     }
 });
+
+// Table Search Functionality
+function searchTable() {
+    const input = document.getElementById('tableSearch');
+    const filter = input.value.toUpperCase();
+    const table = document.querySelector('.table-responsive table tbody');
+    const rows = table.getElementsByTagName('tr');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        const cells = row.getElementsByTagName('td');
+        let found = false;
+        
+        for (let j = 0; j < cells.length; j++) {
+            const cell = cells[j];
+            if (cell) {
+                const text = cell.textContent || cell.innerText;
+                if (text.toUpperCase().indexOf(filter) > -1) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        
+        row.style.display = found ? '' : 'none';
+    }
+}
 </script>
 
 <style>

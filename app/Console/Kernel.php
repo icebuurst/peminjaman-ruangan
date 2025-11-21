@@ -17,6 +17,12 @@ class Kernel extends ConsoleKernel
 
         // Monthly full backup on day 1 at 04:00
         $schedule->command('backup:run')->monthlyOn(1, '04:00');
+
+        // Check expired booking confirmations every hour
+        $schedule->command('bookings:check-expired')->hourly();
+
+        // Send pending booking reminders to admin/petugas every 6 hours
+        $schedule->command('bookings:send-pending-reminders')->everySixHours();
     }
 
     protected function commands(): void
