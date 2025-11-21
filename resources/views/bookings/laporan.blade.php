@@ -3,108 +3,310 @@
 @section('title', 'Laporan Peminjaman Ruangan')
 
 @section('content')
-<div class="container-fluid">
-    <div class="mb-4">
-        <h2 class="fw-bold mb-1">Laporan Peminjaman Ruangan</h2>
+<style>
+    /* Modern Filter Card */
+    .filter-card-modern {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border: none;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    
+    .filter-header-modern {
+        background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%);
+        color: #191919;
+        padding: 1.25rem 1.5rem;
+        font-weight: 700;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .date-input-modern {
+        position: relative;
+    }
+    
+    .date-input-modern label {
+        font-weight: 600;
+        color: #191919;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .date-input-modern input {
+        border: 2px solid #e9ecef;
+        border-radius: 12px;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .date-input-modern input:focus {
+        border-color: #1ceff4;
+        box-shadow: 0 0 0 0.2rem rgba(28,239,244,0.15);
+    }
+    
+    /* Modern Stats Card */
+    .stat-card-modern-report {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        border: none;
+        height: 100%;
+    }
+    
+    .stat-card-modern-report::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--card-gradient);
+    }
+    
+    .stat-card-modern-report:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+    }
+    
+    .stat-icon-modern {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        background: var(--icon-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+    
+    .stat-icon-modern i {
+        font-size: 1.75rem;
+        color: var(--icon-color);
+    }
+    
+    .stat-label-modern {
+        color: #808080;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value-modern {
+        color: #191919;
+        font-size: 2.5rem;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 0;
+    }
+    
+    /* Card Colors */
+    .stat-card-total {
+        --card-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --icon-bg: rgba(102, 126, 234, 0.1);
+        --icon-color: #667eea;
+    }
+    
+    .stat-card-approved {
+        --card-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --icon-bg: rgba(16, 185, 129, 0.1);
+        --icon-color: #10b981;
+    }
+    
+    .stat-card-pending {
+        --card-gradient: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        --icon-bg: rgba(251, 191, 36, 0.1);
+        --icon-color: #f59e0b;
+    }
+    
+    .stat-card-rejected {
+        --card-gradient: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        --icon-bg: rgba(239, 68, 68, 0.1);
+        --icon-color: #ef4444;
+    }
+    
+    /* Modern Buttons */
+    .btn-filter-modern {
+        background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%);
+        border: none;
+        color: #191919;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-filter-modern:hover {
+        background: linear-gradient(135deg, #0dd1d6 0%, #0ab8bc 100%);
+        color: #191919;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(28,239,244,0.3);
+    }
+    
+    .btn-reset-modern {
+        background: #f8f9fa;
+        border: 2px solid #e9ecef;
+        color: #191919;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-reset-modern:hover {
+        background: #e9ecef;
+        border-color: #dee2e6;
+        color: #191919;
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="container-fluid px-4 py-3">
+    <!-- Header -->
+    <div class="mb-4" data-aos="fade-down">
+        <h2 class="fw-bold mb-1" style="color: #191919;">
+            <i class="bi bi-file-earmark-bar-graph-fill me-2" style="color: #1ceff4;"></i>Laporan Peminjaman Ruangan
+        </h2>
         <p class="text-muted mb-0">Filter dan export data peminjaman ruangan</p>
     </div>
     
     <!-- Filter Card -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="bi bi-funnel me-2"></i>Filter Laporan
+    <div class="filter-card-modern" data-aos="fade-up">
+        <div class="filter-header-modern">
+            <i class="bi bi-funnel-fill"></i>
+            <span>Filter Laporan</span>
         </div>
-        <div class="card-body">
+        <div class="p-4">
             <form action="{{ route('bookings.laporan') }}" method="GET" id="filterForm">
                 <div class="row align-items-end">
                     <div class="col-md-4 mb-3 mb-md-0">
-                        <label for="start_date" class="form-label">Tanggal Mulai</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date" 
-                               value="{{ $startDate }}" required>
+                        <div class="date-input-modern">
+                            <label for="start_date">Tanggal Mulai</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" 
+                                   value="{{ $startDate }}" required>
+                        </div>
                     </div>
                     <div class="col-md-4 mb-3 mb-md-0">
-                        <label for="end_date" class="form-label">Tanggal Selesai</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date" 
-                               value="{{ $endDate }}" required>
+                        <div class="date-input-modern">
+                            <label for="end_date">Tanggal Selesai</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" 
+                                   value="{{ $endDate }}" required>
+                        </div>
                     </div>
                     <div class="col-md-4">
-                        <button type="submit" class="btn btn-primary-custom btn-custom me-2">
-                            <i class="bi bi-search me-2"></i>Tampilkan
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-custom" onclick="resetFilter()">
-                            <i class="bi bi-arrow-clockwise me-2"></i>Reset
-                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-filter-modern flex-grow-1">
+                                <i class="bi bi-search"></i>
+                                Tampilkan
+                            </button>
+                            <button type="button" class="btn btn-reset-modern" onclick="resetFilter()">
+                                <i class="bi bi-arrow-clockwise"></i>
+                                Reset
+                            </button>
+                        </div>
                     </div>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Summary Card -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-white-50">Total Peminjaman</h6>
-                    <h2 class="mb-0">{{ $bookings->count() }}</h2>
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="50">
+            <div class="stat-card-modern-report stat-card-total">
+                <div class="stat-icon-modern">
+                    <i class="bi bi-list-ul"></i>
                 </div>
+                <div class="stat-label-modern">Total Peminjaman</div>
+                <div class="stat-value-modern">{{ $bookings->count() }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-white-50">Disetujui</h6>
-                    <h2 class="mb-0">{{ $bookings->where('status', 'approved')->count() }}</h2>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="stat-card-modern-report stat-card-approved">
+                <div class="stat-icon-modern">
+                    <i class="bi bi-check-circle-fill"></i>
                 </div>
+                <div class="stat-label-modern">Disetujui</div>
+                <div class="stat-value-modern">{{ $bookings->where('status', 'approved')->count() }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-white-50">Pending</h6>
-                    <h2 class="mb-0">{{ $bookings->where('status', 'pending')->count() }}</h2>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="150">
+            <div class="stat-card-modern-report stat-card-pending">
+                <div class="stat-icon-modern">
+                    <i class="bi bi-clock-fill"></i>
                 </div>
+                <div class="stat-label-modern">Pending</div>
+                <div class="stat-value-modern">{{ $bookings->where('status', 'pending')->count() }}</div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-danger text-white">
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-white-50">Ditolak</h6>
-                    <h2 class="mb-0">{{ $bookings->where('status', 'rejected')->count() }}</h2>
+        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="stat-card-modern-report stat-card-rejected">
+                <div class="stat-icon-modern">
+                    <i class="bi bi-x-circle-fill"></i>
                 </div>
+                <div class="stat-label-modern">Ditolak</div>
+                <div class="stat-value-modern">{{ $bookings->where('status', 'rejected')->count() }}</div>
             </div>
         </div>
     </div>
 
     <!-- Export Button -->
     @if($bookings->count() > 0)
-    <div class="mb-3">
-        <form action="{{ route('bookings.export') }}" method="GET" class="d-inline">
-            <input type="hidden" name="start_date" value="{{ $startDate }}">
-            <input type="hidden" name="end_date" value="{{ $endDate }}">
-            <input type="hidden" name="format" value="pdf">
-            <button type="submit" class="btn btn-danger btn-custom">
-                <i class="bi bi-file-earmark-pdf me-2"></i>Export ke PDF
-            </button>
-        </form>
-        <span class="text-muted ms-2">
-            <i class="bi bi-info-circle me-1"></i>
-            Total {{ $bookings->count() }} data akan di-export
-        </span>
+    <div class="mb-4" data-aos="fade-up">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <form action="{{ route('bookings.export') }}" method="GET" class="m-0">
+                <input type="hidden" name="start_date" value="{{ $startDate }}">
+                <input type="hidden" name="end_date" value="{{ $endDate }}">
+                <input type="hidden" name="format" value="pdf">
+                <button type="submit" class="btn" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); color: #991b1b; border: none; padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <i class="bi bi-file-earmark-pdf-fill"></i>
+                    Export ke PDF
+                </button>
+            </form>
+            <div class="d-flex align-items-center gap-2" style="background: #f8f9fa; padding: 0.5rem 1rem; border-radius: 50px;">
+                <i class="bi bi-info-circle-fill" style="color: #1ceff4;"></i>
+                <span style="color: #808080; font-size: 0.9rem; font-weight: 500;">
+                    Total <strong style="color: #191919;">{{ $bookings->count() }}</strong> data akan di-export
+                </span>
+            </div>
+        </div>
     </div>
     @endif
 
     <!-- Data Table -->
-    <div class="card">
-        <div class="card-header">
-            <i class="bi bi-table me-2"></i>Preview Data Peminjaman
-            <span class="badge bg-secondary ms-2">{{ $bookings->count() }} data</span>
+    <div class="card" style="background: #ffffff; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: none; overflow: hidden;" data-aos="fade-up">
+        <div class="card-header" style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-bottom: 2px solid #dee2e6; padding: 1.25rem 1.5rem;">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-table" style="color: #1ceff4; font-size: 1.25rem;"></i>
+                    <span style="font-weight: 700; color: #191919; font-size: 1.05rem;">Preview Data Peminjaman</span>
+                </div>
+                <span class="badge" style="background: linear-gradient(135deg, #1ceff4 0%, #0dd1d6 100%); color: #191919; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600;">
+                    {{ $bookings->count() }} data
+                </span>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-0">
             @if($bookings->count() > 0)
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
+                <table class="table table-modern align-middle mb-0">
+                    <thead>
                         <tr>
                             <th width="5%">No</th>
                             <th>Tanggal Booking</th>
@@ -114,37 +316,59 @@
                             <th>Tanggal Mulai</th>
                             <th>Tanggal Selesai</th>
                             <th>Jam</th>
-                            <th>Peserta</th>
-                            <th>Status</th>
+                            <th class="text-center">Peserta</th>
+                            <th class="text-center">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach($bookings as $index => $booking)
                         <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $booking->created_at ? $booking->created_at->format('d/m/Y H:i') : '-' }}</td>
+                            <td><strong>{{ $index + 1 }}</strong></td>
                             <td>
-                                <div class="fw-bold">{{ $booking->user->nama }}</div>
-                                <small class="text-muted">{{ $booking->user->email }}</small>
+                                <div style="color: #191919; font-weight: 600;">{{ $booking->created_at ? $booking->created_at->format('d/m/Y') : '-' }}</div>
+                                <small style="color: #808080;">{{ $booking->created_at ? $booking->created_at->format('H:i') : '' }}</small>
                             </td>
                             <td>
-                                <div class="fw-bold">{{ $booking->room->nama_room }}</div>
-                                <small class="text-muted">{{ $booking->room->lokasi }}</small>
+                                <div style="color: #191919; font-weight: 600;">{{ $booking->user->name }}</div>
+                                <small style="color: #808080;">{{ $booking->user->email }}</small>
+                            </td>
+                            <td>
+                                <div style="color: #191919; font-weight: 600;">{{ $booking->room->nama_room }}</div>
+                                <small style="color: #808080;">
+                                    <i class="bi bi-geo-alt-fill me-1"></i>{{ $booking->room->lokasi }}
+                                </small>
                             </td>
                             <td>{{ Str::limit($booking->keperluan, 40) }}</td>
-                            <td>{{ $booking->tanggal_mulai->format('d/m/Y') }}</td>
-                            <td>{{ $booking->tanggal_selesai->format('d/m/Y') }}</td>
                             <td>
-                                <small>{{ substr($booking->jam_mulai, 0, 5) }} - {{ substr($booking->jam_selesai, 0, 5) }}</small>
+                                <div style="color: #191919; font-weight: 600;">{{ $booking->tanggal_mulai->format('d M Y') }}</div>
                             </td>
-                            <td class="text-center">{{ $booking->jumlah_peserta ?? '-' }}</td>
                             <td>
+                                <div style="color: #191919; font-weight: 600;">{{ $booking->tanggal_selesai->format('d M Y') }}</div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span style="color: #191919; font-weight: 600;">{{ substr($booking->jam_mulai, 0, 5) }}</span>
+                                    <small style="color: #808080;">s/d {{ substr($booking->jam_selesai, 0, 5) }}</small>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span style="background: #f8f9fa; padding: 0.4rem 0.8rem; border-radius: 8px; font-weight: 600; color: #191919;">
+                                    <i class="bi bi-people-fill me-1" style="color: #1ceff4;"></i>{{ $booking->jumlah_peserta ?? '-' }}
+                                </span>
+                            </td>
+                            <td class="text-center">
                                 @if($booking->status == 'pending')
-                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                    <span class="badge-modern badge-pending-modern">
+                                        <i class="bi bi-clock-fill"></i>Menunggu
+                                    </span>
                                 @elseif($booking->status == 'approved')
-                                    <span class="badge bg-success">Disetujui</span>
+                                    <span class="badge-modern badge-approved-modern">
+                                        <i class="bi bi-check-circle-fill"></i>Disetujui
+                                    </span>
                                 @elseif($booking->status == 'rejected')
-                                    <span class="badge bg-danger">Ditolak</span>
+                                    <span class="badge-modern badge-rejected-modern">
+                                        <i class="bi bi-x-circle-fill"></i>Ditolak
+                                    </span>
                                 @endif
                             </td>
                         </tr>
@@ -153,15 +377,103 @@
                 </table>
             </div>
             @else
-            <div class="text-center py-5">
-                <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-                <p class="text-muted mt-3">Tidak ada data peminjaman pada periode ini</p>
-                <p class="text-muted small">Silakan ubah filter tanggal untuk melihat data lain</p>
+            <div class="empty-state-report">
+                <i class="bi bi-inbox"></i>
+                <h5>Tidak ada data peminjaman</h5>
+                <p>Tidak ada data peminjaman pada periode ini</p>
+                <p style="color: #b2b2b2; font-size: 0.9rem;">Silakan ubah filter tanggal untuk melihat data lain</p>
             </div>
             @endif
         </div>
     </div>
 </div>
+
+<style>
+/* Modern Table Styling */
+.table-modern {
+    margin-bottom: 0;
+}
+
+.table-modern thead {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.table-modern thead th {
+    border: none;
+    color: #191919;
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+}
+
+.table-modern tbody tr {
+    transition: all 0.3s ease;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.table-modern tbody tr:hover {
+    background: #f0fdff;
+    transform: translateX(4px);
+}
+
+.table-modern tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+    color: #191919;
+    font-size: 0.9rem;
+}
+
+/* Modern Badge Status */
+.badge-modern {
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.badge-pending-modern {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+.badge-approved-modern {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.badge-rejected-modern {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #991b1b;
+}
+
+/* Empty State */
+.empty-state-report {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.empty-state-report i {
+    font-size: 5rem;
+    color: #cbd5e1;
+    margin-bottom: 1.5rem;
+}
+
+.empty-state-report h5 {
+    color: #191919;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state-report p {
+    color: #808080;
+    margin-bottom: 0;
+}
+</style>
 
 <script>
 function resetFilter() {
