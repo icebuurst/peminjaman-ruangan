@@ -427,8 +427,18 @@ class BookingController extends Controller
                 if ($e->getMessage() === 'overlap' || str_contains($e->getMessage(), 'overlap') || str_contains($e->getMessage(), 'approve_failed')) {
                     return redirect()->back()->with('error', 'Waktu bentrok dengan booking lain (ditolak oleh DB)');
                 }
-                \Log::error('Procedure approve_booking failed: ' . $e->getMessage(), ['booking_id' => $booking->id_booking]);
-                return redirect()->back()->with('error', 'Gagal mengubah status peminjaman');
+                
+                // Log detailed error information
+                \Log::error('Procedure approve_booking failed', [
+                    'booking_id' => $booking->id_booking,
+                    'error_message' => $e->getMessage(),
+                    'error_code' => $e->getCode(),
+                    'error_file' => $e->getFile(),
+                    'error_line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+                
+                return redirect()->back()->with('error', 'Gagal mengubah status peminjaman: ' . $e->getMessage());
             }
         }
 
